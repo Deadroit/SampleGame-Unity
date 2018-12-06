@@ -13,12 +13,16 @@ public class PlayerControl : MonoBehaviour {
     private int goalPoint;
     public Text PointUI;
     public Text HealthUI;
+    public Text CountDownUI;
     private GameObject targetParent;
     public Text winText;
     public AudioSource kenaMusuh;
     public AudioSource kenaPoint;
     private float waktuDisplay = 2;
     private float waktuDisplayDeath = 2;
+    public Scene scenegame;
+    private int cd;
+    private float TimeLeft;
 
     //  Dieksekusi pada saat object di buat atau scene di mulai
     void Start()
@@ -30,11 +34,12 @@ public class PlayerControl : MonoBehaviour {
         targetParent = GameObject.Find("Pick Ups"); // Memanggil game object yang menjadi parent pickup 
         goalPoint =  targetParent.transform.childCount; //Menghitung jumlah pickup yang menjadi child dari object parent 
         SetCountText(); //menginisialisasi teks UI
+        TimeLeft = 40.0f;
     }
 
     // Di eksekusi berulang kali setiap frame 
     void Update() {
-        
+        countDown();
     }
 
     //Dieksekusi berulangkali setiap frame tetapi dengan deltaTime yang sama
@@ -46,18 +51,29 @@ public class PlayerControl : MonoBehaviour {
         Vector3 pergerakan = new Vector3(gerakHorizontal, 0.0f, gerakVertikal); //Membuat vektor3D berupa gerakan 3 Dimensi
         rb.AddForce(pergerakan * kecepatan);// Menerpakan gaya 3D pada rigidbody dari player agar player  bergerak
 
-        if (countPoint == goalPoint) //Ketika point yang di kumpulkan 
+        if (countPoint == goalPoint && SceneManager.GetActiveScene().name == "GameL1") //Ketika point yang di kumpulkan 
         {
             winText.gameObject.SetActive(true); //menampilkan winText 
             waktuDisplay -= Time.deltaTime; //Membuat delay agar wintext terbaca, time.delta time adalah sebuah variable yang berisi selisih waktu antar frame game
-            if (waktuDisplay <= 0) { //jika waktu delay  habis
-                SceneManager.LoadScene("StartMenu"); //Memuat scene yan bernama "StartMenu"
+            if (waktuDisplay <= 0)
+            { //jika waktu delay  habis
+                SceneManager.LoadScene("GameL2"); //Memuat scene yan bernama "GameL2"
             }
         }
+
+        if (countPoint == goalPoint && SceneManager.GetActiveScene().name == "GameL2") //Ketika point yang di kumpulkan 
+        {
+            winText.gameObject.SetActive(true); //menampilkan winText 
+            waktuDisplay -= Time.deltaTime; //Membuat delay agar wintext terbaca, time.delta time adalah sebuah variable yang berisi selisih waktu antar frame game
+            if (waktuDisplay <= 0)
+            { //jika waktu delay  habis
+                SceneManager.LoadScene("StartMenu"); //Memuat scene yan bernama "StartMenu"
+            }
+
+        }
+
         if (nyawa <= 0)//Ketika nyawa habis 
         {
-
-
             winText.text = "You Die"; //mengganti win text menjadi you die
             winText.gameObject.SetActive(true); // menampilkan wintext
             waktuDisplayDeath -= Time.deltaTime; //Membuat delay agar wintext terbaca, time.delta time adalah sebuah variable yang berisi selisih waktu antar frame game
@@ -66,8 +82,9 @@ public class PlayerControl : MonoBehaviour {
                 SceneManager.LoadScene("GameOver");//Memuat scene yan bernama "GameOver"
             }
         }
-    }
 
+    }
+    
     void OnTriggerEnter(Collider other) //di eksekusi jika player menabrak object yang memiliki collider bertipe isTrigger, other adalah collider lawan tabrayk
     {
         if (other.gameObject.CompareTag("Pick Up"))  //Membandingkan tag dari object yang di tabrak
@@ -87,13 +104,40 @@ public class PlayerControl : MonoBehaviour {
             SetCountText(); // Merefresh nilai text UI
 
         }
+
+        if (other.gameObject.CompareTag("Friend")) //Membandingkan tag dari object yang di tabrak
+        {
+            kenaMusuh.Play();//play musik
+
+            other.gameObject.SetActive(false);//Membuat object yang di tabrak menghilang
+            if (nyawa < 5)
+            {
+                nyawa = nyawa + 1;//Menambah nyawa
+            } else
+            {
+                nyawa = nyawa + 0;
+            }
+            
+            SetCountText(); // Merefresh nilai text UI
+
+        }
+    }
+
+    private void countDown()
+    {
+        TimeLeft -=  Time.deltaTime;
+        cd = (int) TimeLeft;
+        CountDownUI.text = "Time Left " + cd.ToString();
+        if (cd <= 0)
+        {
+            SceneManager.LoadScene("GameOver");
+        }
     }
 
     void SetCountText()
     {
         PointUI.text = "Point: " + countPoint.ToString(); //Mengisi text Point UI 
         HealthUI.text = "Health: " + nyawa.ToString(); //Mengisi text health
-
     }
     
 }
